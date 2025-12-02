@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Downloads</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the button effect */
+        .download-btn {
+            transition: all 0.15s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+        }
+        .download-btn:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        .download-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4 font-sans">
+
+    <div class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-lg text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Application Downloads</h1>
+        <p class="text-gray-600 mb-10">
+            Click a button below to download the corresponding Android package file or try the cognate application.
+        </p>
+        
+        <div class="flex flex-col space-y-6">
+            <a href="grp.apk" **download** class="download-btn 
+                bg-indigo-600 text-white 
+                py-3 px-6 rounded-lg 
+                text-lg font-semibold 
+                hover:bg-indigo-700 
+                focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50 
+                transition duration-150 ease-in-out">
+                Download Project
+            </a>
+
+            <a href="app-debug.apk" **download** class="download-btn 
+                bg-green-600 text-white 
+                py-3 px-6 rounded-lg 
+                text-lg font-semibold 
+                hover:bg-green-700 
+                focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50 
+                transition duration-150 ease-in-out">
+                Download cognito
+            </a>
+            
+            <a href="er.html" class="download-btn 
+                bg-red-600 text-white 
+                py-3 px-6 rounded-lg 
+                text-lg font-semibold 
+                hover:bg-red-700 
+                focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-50 
+                transition duration-150 ease-in-out">
+                Try cognate
+            </a>
+        </div>
+
+    
+    </div>
+</body>
+</html>
