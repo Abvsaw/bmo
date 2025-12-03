@@ -2,66 +2,867 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- CRITICAL: Ensures proper scaling and viewport width on mobile devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application Downloads</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Dynamic Knowledge Check (Offline) - V2</title>
+    <!--
+        ALL STYLES HAVE BEEN INLINED FOR FULL OFFLINE CAPABILITY.
+    -->
     <style>
-        /* Custom styles for the button effect */
-        .download-btn {
-            transition: all 0.15s ease-in-out;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+        /* 1. Define Color Variables (Matching original Tailwind Config) */
+        :root {
+            --bg-dark: #2c3e50;
+            --primary: #1abc9c;
+            --action-blue: #3498db;
+            --card-bg: #34495e;
+            --text-light: #ecf0f1;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            /* Gray shades used for borders and text */
+            --gray-700: #4a5568;
+            --gray-800: #2d3748;
+            --gray-400: #a0aec0;
+            --warning-orange: #f39c12;
         }
-        .download-btn:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
+
+        /* 2. Base Styling (Replacing Body and Layout Utilities) */
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem; /* p-4 */
+            font-family: 'Inter', sans-serif;
+            margin: 0;
         }
-        .download-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+
+        .app-container {
+            width: 100%;
+            max-width: 42rem; /* Simplified responsive max-width */
+            background-color: var(--card-bg);
+            box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.5); /* shadow-xl improved */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem; /* Mobile-friendly default padding (p-6) */
         }
+
+        /* Media Query for Desktop/Tablet: Increase padding for larger screens */
+        @media (min-width: 640px) {
+            .app-container {
+                padding: 2.5rem; /* p-10 */
+            }
+        }
+
+        /* 3. Custom Button/Input Styles */
+        .option-button {
+            transition: all 0.2s;
+            border: 2px solid #4e6d8a;
+            background-color: var(--card-bg);
+            color: var(--text-light);
+            display: block;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            font-size: 1.125rem;
+            font-weight: 500;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+        .option-button:hover {
+            background-color: #4e6d8a;
+            box-shadow: 0 0 0 2px rgba(27, 172, 156, 0.5); /* Primary ring effect */
+        }
+        /* Focus state for accessibility (A11y) */
+        .option-button:focus,
+        input[type="radio"]:focus + label.option-button {
+            outline: 2px solid var(--action-blue);
+            outline-offset: 2px;
+        }
+        input[type="radio"]:checked + label.option-button {
+            border-color: var(--primary);
+            background-color: var(--primary);
+            color: var(--bg-dark);
+        }
+        input[type="radio"] {
+            display: none;
+        }
+        .text-input-box {
+            background-color: var(--card-bg);
+            color: var(--text-light);
+            border: 1px solid #4e6d8a;
+            padding: 10px;
+            border-radius: 8px;
+            resize: vertical; /* Allow vertical resizing for better open-ended input */
+            min-height: 100px;
+            font-family: 'Inter', sans-serif;
+            width: 100%; /* w-full */
+            transition: border-color 0.2s;
+        }
+        .text-input-box:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* 4. Utility Classes (Functional Colors and Spacing) */
+        .text-primary { color: var(--primary); }
+        .text-action-blue { color: var(--action-blue); }
+        .text-success { color: var(--success); }
+        .text-error { color: var(--error); }
+        .text-warning { color: var(--warning-orange); }
+        .text-gray-400 { color: var(--gray-400); }
+        .bg-gray-800 { background-color: var(--gray-800); }
+        .bg-success { background-color: var(--success); }
+        .bg-error { background-color: var(--error); }
+        .bg-success\/30 { background-color: rgba(46, 204, 113, 0.3); }
+        .bg-error\/30 { background-color: rgba(231, 76, 60, 0.3); }
+        .bg-warning\/30 { background-color: rgba(243, 156, 18, 0.3); }
+
+        .border { border-width: 1px; border-style: solid; }
+        .border-2 { border-width: 2px; border-style: solid; }
+        .border-gray-700 { border-color: var(--gray-700); }
+        .border-primary { border-color: var(--primary); }
+        .border-action-blue { border-color: var(--action-blue); }
+        .border-success { border-color: var(--success); }
+        .border-error { border-color: var(--error); }
+        .border-warning { border-color: var(--warning-orange); }
+        .border-error\/50 { border-color: rgba(231, 76, 60, 0.5); }
+
+        /* Hover Transitions (Only visible on non-touch devices) */
+        button, a {
+            transition: all 0.15s;
+            border-radius: 0.75rem;
+            /* Ensure large touch target */
+            min-height: 44px;
+        }
+        .hover\:bg-action-blue:hover { background-color: var(--action-blue); }
+        .hover\:bg-primary:hover { background-color: var(--primary); }
+        .hover\:text-text-light:hover { color: var(--text-light); }
+        .hover\:bg-bg-dark:hover { background-color: var(--bg-dark); }
+        .hover\:bg-success\/80:hover { background-color: rgba(46, 204, 113, 0.8); }
+        .hover\:bg-error\/80:hover { background-color: rgba(231, 76, 60, 0.8); }
+        .hover\:bg-error\/10:hover { background-color: rgba(231, 76, 60, 0.1); }
+        .hover\:bg-card-bg:hover { background-color: #4e6d8a; /* Darker card background on hover */ }
+
+        /* Spacing and Text Utilities */
+        .hidden { display: none !important; }
+        .w-full { width: 100%; }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .flex-col { flex-direction: column; }
+        .space-y-3 > * + * { margin-top: 0.75rem; }
+        .space-y-4 > * + * { margin-top: 1rem; }
+        .gap-2 { gap: 0.5rem; }
+
+        /* Font and Size */
+        .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+        .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+        .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-xs { font-size: 0.75rem; line-height: 1rem; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .font-medium { font-weight: 500; }
+
+        /* Simplified Padding/Margin */
+        .p-2 { padding: 0.5rem; }
+        .p-4 { padding: 1rem; }
+        .p-5 { padding: 1.25rem; }
+        .p-6 { padding: 1.5rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .px-8 { padding-left: 2rem; padding-right: 2rem; }
+        .mt-3 { margin-top: 0.75rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-5 { margin-bottom: 1.25rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .my-4 { margin-top: 1rem; margin-bottom: 1rem; }
+        .pt-4 { padding-top: 1rem; }
+        
+        /* Progress Bar Styles */
+        #progress-bar-container {
+            height: 8px;
+            background-color: var(--gray-700);
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        #progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary);
+            transition: width 0.3s ease-in-out;
+            border-radius: 4px;
+        }
+
+        /* Review List Styles */
+        .review-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            border: 1px solid var(--gray-700);
+        }
+        .review-item:hover {
+            background-color: #4e6d8a;
+        }
+        .icon-correct { color: var(--success); }
+        .icon-incorrect { color: var(--error); }
+        .review-detail-box {
+            padding: 1rem;
+            margin-top: 0.25rem;
+            margin-bottom: 1rem;
+            border-radius: 0.75rem;
+        }
+        .review-detail-box h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1.125rem;
+        }
+        .review-detail-box p {
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+        .explanation-text {
+            border-left: 4px solid var(--primary);
+            padding-left: 0.75rem;
+            background-color: var(--gray-800);
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            font-style: italic;
+        }
+
+
+        /* Rounded Corners */
+        .rounded-xl { border-radius: 0.75rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+
     </style>
 </head>
-<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4 font-sans">
+<body class="bg-bg-dark text-text-light min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-lg text-center">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Application Downloads</h1>
-        <p class="text-gray-600 mb-10">
-            Click a button below to download the corresponding Android package file or try the cognate application.
-        </p>
+<div id="app-container" class="app-container">
+
+    <!-- --- State Variables and Constants --- -->
+    <script>
+        const AI_PROMPT_FORMAT = `Please generate a set of quiz questions on [TOPIC] and format them strictly as follows:
+
+1. Multiple Choice (MC) / True-False (TF) Format:
+q[N] question text@correct answer-wrong option 1-wrong option 2@@Explanation for the concept.
+
+2. Open-Ended (Open) / Fill-in-the-Blank Format:
+q[N] question text@Acceptable Answer 1|Acceptable Answer 2|Acceptable Answer 3@@Explanation for the concept.
+
+RULES:
+1. Every question must start on a new line.
+2. The question number (q[N]) is optional but recommended.
+3. Use the '@' symbol to separate the question from the options/answers.
+4. Use the '@@' symbol to separate the options/answers from the explanation.
+5. MC/TF options use hyphens (-). The correct answer MUST be the very first option listed after the '@' symbol.
+6. Open-ended answers use pipes (|) to list ALL acceptable correct answers (e.g., singular/plural, abbreviations).
+7. For True/False, use exactly '@True-False' or '@False-True' (correct option still comes first).
+
+Example MC:
+q1 The capital of France is Paris.@True-False@@Paris is the most populous city in France and its political capital.
+
+Example Open:
+q2 Name the smallest prime number.@2@@The smallest prime number is 2, as it is divisible only by 1 and itself.`;
+
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+        let selectedOption = null;
+        let userAttempts = []; // New array to store results for review mode
+
+        // --- Helper Functions ---
+
+        /**
+         * Sets feedback text for a short duration.
+         */
+        function setFeedback(elementId, message, colorClass, duration = 3000) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = `text-lg font-semibold transition duration-300 ${colorClass} text-center`;
+
+            if (duration > 0) {
+                setTimeout(() => {
+                    el.textContent = '';
+                    el.className = 'h-8 text-center mb-4'; // Reset to original container styling
+                }, duration);
+            }
+        }
+
+        /**
+         * Implements the robust question parsing logic.
+         */
+        function parseQuestions(rawData) {
+            const lines = rawData.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            const parsedData = [];
+            let skippedCount = 0;
+
+            for (const line of lines) {
+                try {
+                    let processedLine = line;
+
+                    // 1. Strip potential qN prefix (e.g., "q1 ")
+                    const qPrefixMatch = processedLine.match(/^q\d+\s/i);
+                    if (qPrefixMatch) {
+                        processedLine = processedLine.substring(qPrefixMatch[0].length).trim();
+                    }
+
+                    // 2. Split question/options from explanation using '@@'
+                    if (!processedLine.includes('@@')) {
+                        throw new Error("Missing '@@' separator for explanation.");
+                    }
+                    const [questionAndOptions, explanation] = processedLine.split('@@', 2).map(s => s.trim());
+
+                    // 3. Split question from options/answer part using '@'
+                    if (!questionAndOptions.includes('@')) {
+                        throw new Error("Missing '@' separator for answer/options.");
+                    }
+                    const [questionPart, optionsPart] = questionAndOptions.split('@', 2).map(s => s.trim());
+
+                    if (!questionPart) {
+                        throw new Error("Empty question part.");
+                    }
+
+                    let qType;
+                    let optionsList = [];
+                    let correctAnswer;
+
+                    if (optionsPart.includes('|')) {
+                        // --- OPEN-ENDED QUESTION ---
+                        qType = 'open';
+                        // Acceptable answers are stored as lowercase for case-insensitive matching
+                        optionsList = optionsPart.split('|').map(opt => opt.trim().toLowerCase()).filter(opt => opt.length > 0);
+                        if (optionsList.length === 0) {
+                            throw new Error("Open-ended question requires at least one acceptable answer.");
+                        }
+                        // For open questions, the 'answer' is the list of acceptable options
+                        correctAnswer = optionsList; 
+
+                    } else {
+                        // --- MC / T/F QUESTION ---
+                        optionsList = optionsPart.split('-').map(opt => opt.trim()).filter(opt => opt.length > 0);
+
+                        if (optionsList.length < 2) {
+                            throw new Error("MC/TF questions require at least two options.");
+                        }
+
+                        correctAnswer = optionsList[0]; // First option is always the correct one.
+                        
+                        // Determine if it's T/F
+                        const isTF = (optionsList.length === 2 &&
+                                      (optionsList.map(o => o.toLowerCase()).every(o => o === 'true' || o === 'false')));
+                        
+                        qType = isTF ? 'tf' : 'mc';
+                    }
+                    
+                    const questionEntry = {
+                        type: qType,
+                        question: questionPart,
+                        answer: correctAnswer, // String for MC/TF, Array for Open
+                        options: optionsList.length > 0 && qType !== 'open' ? optionsList : undefined,
+                        explanation: explanation
+                    };
+
+                    parsedData.push(questionEntry);
+
+                } catch (e) {
+                    skippedCount++;
+                }
+            }
+
+            return { parsedData, skippedCount };
+        }
+
+        /**
+         * Copies the AI prompt format instructions to the clipboard.
+         */
+        function copyFormatToClipboard() {
+            const feedbackEl = 'welcome-feedback';
+            try {
+                const tempInput = document.createElement('textarea');
+                tempInput.value = AI_PROMPT_FORMAT.trim();
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+
+                setFeedback(feedbackEl, "✅ AI Prompt format copied to clipboard! Paste it into your AI tool.", 'text-success');
+            } catch (err) {
+                setFeedback(feedbackEl, "❌ Error copying to clipboard. Please manually copy the format from the instructions above.", 'text-error', 5000);
+            }
+        }
+
+
+        // --- Main Quiz Flow ---
+
+        function startQuiz() {
+            const rawData = document.getElementById('quiz-data-input').value.trim();
+            const feedbackEl = 'welcome-feedback';
+
+            if (!rawData) {
+                setFeedback(feedbackEl, "🛑 Error: Please paste your quiz questions above before starting.", 'text-error', 5000);
+                return;
+            }
+
+            const { parsedData, skippedCount } = parseQuestions(rawData);
+
+            if (parsedData.length === 0) {
+                setFeedback(feedbackEl, "🛑 Error: Could not parse any valid questions from the input. Please check the required format.", 'text-error', 5000);
+                return;
+            }
+
+            if (skippedCount > 0) {
+                setFeedback(feedbackEl, `⚠️ Warning: Loaded ${parsedData.length} questions, but skipped ${skippedCount} lines due to formatting errors.`, 'text-warning', 8000);
+            } else {
+                document.getElementById(feedbackEl).textContent = ''; // Clear if completely successful
+            }
+
+            questions = parsedData;
+            questions.sort(() => Math.random() - 0.5); // Shuffle questions
+            currentQuestionIndex = 0;
+            score = 0;
+            answered = false;
+            userAttempts = []; // Reset attempts array
+
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+
+            loadQuestion();
+        }
         
-        <div class="flex flex-col space-y-6">
-            <a href="grp.apk" **download** class="download-btn 
-                bg-indigo-600 text-white 
-                py-3 px-6 rounded-lg 
-                text-lg font-semibold 
-                hover:bg-indigo-700 
-                focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50 
-                transition duration-150 ease-in-out">
-                Download Project
-            </a>
+        /**
+         * Updates the visual progress bar based on the current question index.
+         */
+        function updateProgressBar() {
+            const total = questions.length;
+            // Use currentQuestionIndex + 1 for the visual step if not showing results, otherwise use total
+            const current = currentQuestionIndex; 
+            const percent = total > 0 ? (current / total) * 100 : 0;
+            document.getElementById('progress-bar-fill').style.width = `${percent}%`;
+        }
+        
+        /**
+         * Updates the progress bar to 100% when the quiz is finished.
+         */
+        function completeProgressBar() {
+            document.getElementById('progress-bar-fill').style.width = `100%`;
+        }
 
-            <a href="app-debug.apk" **download** class="download-btn 
-                bg-green-600 text-white 
-                py-3 px-6 rounded-lg 
-                text-lg font-semibold 
-                hover:bg-green-700 
-                focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50 
-                transition duration-150 ease-in-out">
-                Download cognito
-            </a>
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                completeProgressBar();
+                showResults();
+                return;
+            }
             
-            <a href="er.html" class="download-btn 
-                bg-red-600 text-white 
-                py-3 px-6 rounded-lg 
-                text-lg font-semibold 
-                hover:bg-red-700 
-                focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-50 
-                transition duration-150 ease-in-out">
-                Try cognate
-            </a>
+            updateProgressBar();
+
+            answered = false;
+            selectedOption = null;
+            const button = document.getElementById('check-next-button');
+
+            button.textContent = "Check Answer";
+            button.disabled = true;
+
+            // Reset button classes to default state (Action Blue Ghost Button)
+            button.className = "w-full border-2 text-lg font-semibold py-3 rounded-xl transition duration-150 border-action-blue text-action-blue hover:bg-action-blue hover:text-text-light";
+
+            document.getElementById('quiz-feedback').textContent = "";
+
+            const q = questions[currentQuestionIndex];
+
+            // Update progress and question text
+            document.getElementById('quiz-progress').textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+            document.getElementById('question-text').textContent = q.question;
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = ''; // Clear previous options
+
+            if (q.type === 'mc' || q.type === 'tf') {
+                // --- MULTIPLE CHOICE / TRUE/FALSE ---
+                let options = q.options.slice();
+                options.sort(() => Math.random() - 0.5); // Shuffle MC options
+
+                options.forEach((optionText, index) => {
+                    const id = `option-${index}`;
+
+                    const div = document.createElement('div');
+                    div.className = 'mb-3';
+
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = 'quiz-option';
+                    input.id = id;
+                    input.value = optionText;
+                    input.onchange = () => {
+                        selectedOption = optionText;
+                        document.getElementById('check-next-button').disabled = false;
+                    };
+
+                    const label = document.createElement('label');
+                    label.setAttribute('for', id);
+                    label.textContent = optionText;
+                    label.className = 'option-button'; // Use the custom class defined in <style>
+
+                    div.appendChild(input);
+                    div.appendChild(label);
+                    optionsContainer.appendChild(div);
+                });
+            } else if (q.type === 'open') {
+                // --- OPEN-ENDED QUESTION ---
+                const textarea = document.createElement('textarea');
+                textarea.id = 'open-answer-input';
+                textarea.className = 'text-input-box mb-3';
+                textarea.placeholder = 'Type your answer here...';
+                textarea.oninput = () => {
+                    selectedOption = textarea.value.trim();
+                    document.getElementById('check-next-button').disabled = selectedOption.length === 0;
+                };
+                optionsContainer.appendChild(textarea);
+            }
+        }
+
+        function checkAnswer() {
+            if (answered) {
+                // If already answered, treat button press as 'Next Question'
+                currentQuestionIndex++;
+                loadQuestion();
+                return;
+            }
+
+            if (!selectedOption || (typeof selectedOption === 'string' && selectedOption.length === 0)) {
+                setFeedback('quiz-feedback', "Please provide an answer before checking.", 'text-error', 3000);
+                return;
+            }
+
+            const q = questions[currentQuestionIndex];
+            let isCorrect = false;
+
+            if (q.type === 'open') {
+                // Check if the trimmed, lowercase input matches any acceptable answer
+                const userAnswerLower = selectedOption.toLowerCase();
+                isCorrect = q.answer.some(acceptableAnswer => userAnswerLower === acceptableAnswer);
+            } else {
+                // MC/TF check
+                isCorrect = selectedOption === q.answer;
+            }
+            
+            answered = true;
+            
+            // Log the attempt
+            userAttempts.push({
+                question: q.question,
+                userAnswer: selectedOption,
+                // Display acceptable answers joined by ' OR ' for review screen
+                correctAnswer: q.type === 'open' ? q.answer.join(' OR ') : q.answer,
+                isCorrect: isCorrect,
+                explanation: q.explanation
+            });
+
+            const button = document.getElementById('check-next-button');
+            const feedbackEl = document.getElementById('quiz-feedback');
+
+            // Provide visual feedback
+            if (isCorrect) {
+                score++;
+                feedbackEl.textContent = "✅ Correct! Brilliant!";
+                feedbackEl.className = 'h-8 text-center my-4 font-semibold text-success';
+                button.className = "w-full border-2 text-lg font-semibold py-3 rounded-xl transition duration-150 bg-success border-success text-text-light hover:bg-success\/80";
+            } else {
+                const displayAnswer = q.type === 'open' ? `One acceptable answer was: ${q.answer[0]}` : `The correct answer was: ${q.answer}`;
+                feedbackEl.textContent = `❌ Incorrect. ${displayAnswer}`;
+                feedbackEl.className = 'h-8 text-center my-4 font-semibold text-error';
+                button.className = "w-full border-2 text-lg font-semibold py-3 rounded-xl transition duration-150 bg-error border-error text-text-light hover:bg-error\/80";
+            }
+
+            // Disable input elements and provide visual cues
+            if (q.type === 'open') {
+                document.getElementById('open-answer-input').disabled = true;
+                const inputEl = document.getElementById('open-answer-input');
+                inputEl.style.borderColor = isCorrect ? 'var(--success)' : 'var(--error)';
+                inputEl.style.backgroundColor = isCorrect ? 'var(--bg-success/30)' : 'var(--bg-error/30)';
+            } else {
+                document.querySelectorAll('input[name="quiz-option"]').forEach(input => input.disabled = true);
+                document.querySelectorAll('.option-button').forEach(label => {
+                    const input = document.getElementById(label.getAttribute('for'));
+                    if (input.value === q.answer) {
+                        label.classList.add('bg-success/30', 'border-success', 'shadow-lg');
+                    } else if (input.value === selectedOption && !isCorrect) {
+                        label.classList.add('bg-error/30', 'border-error', 'shadow-lg');
+                    }
+                });
+            }
+
+            button.textContent = "Next Question";
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('hidden');
+
+            const numQuestions = questions.length;
+            const percentage = numQuestions > 0 ? Math.round((score / numQuestions) * 100) : 0;
+            let message = "";
+            let colorClass = "";
+
+            if (percentage >= 80) {
+                message = "Outstanding! You are an expert in this topic!";
+                colorClass = 'text-success';
+            } else if (percentage >= 50) {
+                message = "Well done! You have a good understanding.";
+                colorClass = 'text-primary';
+            } else {
+                message = "Keep studying! Review the key concepts.";
+                colorClass = 'text-error';
+            }
+
+            document.getElementById('final-score').textContent = `Your Final Score: ${score}/${numQuestions} (${percentage}%)`;
+
+            const resultsMessageEl = document.getElementById('results-message');
+            resultsMessageEl.textContent = message;
+            resultsMessageEl.className = `text-xl font-semibold mb-8 ${colorClass}`;
+        }
+        
+        function showReview() {
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('review-screen').classList.remove('hidden');
+            
+            const reviewList = document.getElementById('review-list');
+            reviewList.innerHTML = ''; // Clear previous list
+            
+            userAttempts.forEach((attempt, index) => {
+                // Main clickable review item
+                const item = document.createElement('a');
+                item.className = 'review-item transition duration-150 hover:bg-gray-800';
+                item.onclick = () => toggleReviewDetail(index);
+                item.href = `javascript:void(0)`; // Prevents page jump
+                item.setAttribute('role', 'button');
+                item.setAttribute('aria-expanded', 'false');
+
+                const iconClass = attempt.isCorrect ? 'icon-correct' : 'icon-incorrect';
+                const icon = attempt.isCorrect ? '✅' : '❌';
+
+                item.innerHTML = `
+                    <span class="font-medium">Q${index + 1}: ${attempt.question.substring(0, 60)}${attempt.question.length > 60 ? '...' : ''}</span>
+                    <span class="text-xl ${iconClass}">${icon}</span>
+                `;
+                
+                // Hidden detail box
+                const detailDiv = document.createElement('div');
+                detailDiv.id = `review-detail-${index}`;
+                detailDiv.className = 'review-detail-box bg-gray-700 hidden';
+
+                detailDiv.innerHTML = `
+                    <p class="text-sm text-gray-400 mb-1">Your Answer:</p>
+                    <p class="font-medium mb-3 p-2 rounded-lg ${attempt.isCorrect ? 'bg-success/30' : 'bg-error/30'}">${attempt.userAnswer || '[No Answer Provided]'}</p>
+                    
+                    <p class="text-sm text-gray-400 mb-1">Correct Answer${attempt.correctAnswer.includes(' OR ') ? 's' : ''}:</p>
+                    <p class="font-medium mb-4 text-success p-2 rounded-lg border border-success/50">${attempt.correctAnswer}</p>
+
+                    <p class="text-sm text-gray-400 mb-1">Explanation:</p>
+                    <div class="explanation-text text-sm">${attempt.explanation || 'No explanation provided for this question.'}</div>
+                `;
+                
+                reviewList.appendChild(item);
+                reviewList.appendChild(detailDiv);
+            });
+        }
+        
+        function toggleReviewDetail(index) {
+            const detailEl = document.getElementById(`review-detail-${index}`);
+            const itemEl = document.querySelector(`.review-item:nth-child(${index * 2 + 1})`);
+            if (detailEl && itemEl) {
+                const isHidden = detailEl.classList.toggle('hidden');
+                itemEl.setAttribute('aria-expanded', isHidden ? 'false' : 'true');
+            }
+        }
+
+        function restartGui() {
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('review-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('welcome-screen').classList.remove('hidden');
+            document.getElementById('welcome-feedback').textContent = ''; // Clear warnings/errors
+        }
+
+        /**
+         * Clears the saved quiz data from localStorage and resets the textarea to the default example.
+         */
+        function clearData() {
+            localStorage.removeItem('quizDataInput');
+            const inputEl = document.getElementById('quiz-data-input');
+            const exampleData = document.getElementById('default-example-data').textContent.trim();
+
+            if (inputEl) {
+                inputEl.value = exampleData;
+                setFeedback('welcome-feedback', "✅ Saved quiz data cleared and reverted to example content.", 'text-success', 3000);
+            }
+        }
+
+        /**
+         * Loads quiz data from localStorage on startup.
+         */
+        function loadData() {
+            const savedData = localStorage.getItem('quizDataInput');
+            const inputEl = document.getElementById('quiz-data-input');
+            const exampleData = document.getElementById('default-example-data').textContent.trim();
+
+            if (inputEl) {
+                if (savedData) {
+                     inputEl.value = savedData;
+                     if (savedData.trim() !== exampleData) {
+                        setFeedback('welcome-feedback', "Quiz data loaded successfully from your last session.", 'text-success', 3000);
+                     }
+                } else {
+                    inputEl.value = exampleData;
+                }
+            }
+        }
+
+        /**
+         * Saves the current content of the quiz data input to localStorage.
+         */
+        function saveData() {
+            const data = document.getElementById('quiz-data-input').value;
+            localStorage.setItem('quizDataInput', data);
+        }
+
+        // Execute initialization when the window loads
+        window.onload = function() {
+            loadData();
+            const inputEl = document.getElementById('quiz-data-input');
+            if (inputEl) {
+                inputEl.addEventListener('input', saveData);
+            }
+        };
+    </script>
+
+
+    <!-- === 1. Welcome / Input Screen === -->
+    <div id="welcome-screen">
+        <h1 class="text-4xl font-bold text-center text-primary mb-6">🧠 Dynamic Knowledge Check V2</h1>
+
+        <p class="text-lg font-semibold text-text-light mb-4 text-center">
+            Paste your quiz questions below using the required format. **Your data is automatically saved.**
+        </p>
+
+        <div class="mb-5 bg-bg-dark rounded-lg p-4 border border-gray-700">
+            <p class="text-sm text-gray-400 mb-2 font-semibold">Updated Required Format:</p>
+            <pre class="bg-gray-800 p-2 rounded-lg text-xs overflow-auto text-primary">q[N] question@answer_options@@Explanation</pre>
+            <ul class="text-xs text-gray-400 mt-2">
+                <li>**MC/TF:** Options separated by `-`.</li>
+                <li>**Open-Ended:** Acceptable answers separated by `|`.</li>
+            </ul>
+
+            <button onclick="copyFormatToClipboard()" class="mt-3 w-full border border-primary text-primary font-semibold py-2 rounded-lg transition duration-150 hover:bg-primary hover:text-bg-dark">
+                Copy AI Prompt Format to Clipboard
+            </button>
         </div>
 
-    
+        <textarea id="quiz-data-input" rows="10" class="text-input-box mb-4 text-sm" placeholder="Paste your questions here..."></textarea>
+
+        <!-- Hidden element to hold the default example data for the Clear function and initial load -->
+        <div id="default-example-data" class="hidden">
+            q1 The Renaissance refers to a period of 'rebirth' in art, culture, and learning in Europe.@True-False@@This period followed the Middle Ages.
+            q13 Which country is considered the birthplace of the Renaissance?@Italy-France-Spain-Germany@@The Italian city-states like Florence were the centers of the movement.
+            q16 What famous family was the main patron of the arts in Florence?@The Medici|Medici|Medici family@@The Medici family amassed wealth through banking and sponsored many artists.
+            q20 What is the standard international unit for electrical resistance?@Ohm-Volt-Ampere-Watt@@The unit for resistance (R) is the Ohm ($\Omega$), named after Georg Ohm.
+        </div>
+
+        <div id="welcome-feedback" class="h-8 text-center mb-4"></div>
+
+        <div class="flex flex-col space-y-4 pt-4">
+            <button onclick="startQuiz()" class="w-full border-2 text-xl font-bold py-3 rounded-xl transition duration-150 border-action-blue text-action-blue hover:bg-action-blue hover:text-text-light">
+                Start Quiz
+            </button>
+            <button onclick="clearData()" class="w-full text-sm font-semibold py-2 rounded-lg transition duration-150 text-error border border-error/50 hover:bg-error/10">
+                Clear All Saved Data
+            </button>
+        </div>
     </div>
+
+    <!-- === 2. Quiz Screen === -->
+    <div id="quiz-screen" class="hidden">
+        <h1 class="text-3xl font-bold text-center text-primary mb-4">Quiz in Progress</h1>
+        
+        <!-- Progress Bar -->
+        <div id="progress-bar-container">
+            <div id="progress-bar-fill"></div>
+        </div>
+
+        <p id="quiz-progress" class="text-center text-gray-400 mb-6 font-medium"></p>
+
+        <!-- Question Card -->
+        <div class="bg-card-bg p-5 rounded-xl shadow-lg border border-gray-700 mb-6">
+            <p id="question-text" class="text-xl font-semibold mb-0"></p>
+        </div>
+
+        <!-- Options/Input -->
+        <div id="options-container" class="space-y-3">
+            <!-- Options are dynamically inserted here -->
+        </div>
+
+        <div id="quiz-feedback" class="h-8 text-center my-4 font-semibold"></div>
+
+        <!-- Check/Next Button -->
+        <button id="check-next-button" onclick="checkAnswer()" disabled
+                class="w-full border-2 border-action-blue text-action-blue text-lg font-semibold py-3 rounded-xl transition duration-150 hover:bg-action-blue hover:text-text-light"
+        >Check Answer</button>
+
+    </div>
+
+    <!-- === 3. Results Screen === -->
+    <div id="results-screen" class="hidden text-center">
+        <h1 class="text-4xl font-bold text-primary mb-6">🏆 Quiz Complete! 🏆</h1>
+
+        <p id="final-score" class="text-2xl font-bold mb-4"></p>
+
+        <p id="results-message" class="text-xl font-semibold mb-8"></p>
+
+        <div class="flex flex-col gap-4">
+            <button onclick="showReview()" class="border-2 text-lg font-bold py-3 px-8 rounded-xl transition duration-150 border-warning text-warning hover:bg-warning/30 hover:text-text-light">
+                Review Quiz Answers
+            </button>
+            <button onclick="restartGui()" class="border-2 text-lg font-bold py-3 px-8 rounded-xl transition duration-150 border-action-blue text-action-blue hover:bg-action-blue hover:text-text-light">
+                Load New Quiz
+            </button>
+        </div>
+    </div>
+    
+    <!-- === 4. Review Screen === -->
+    <div id="review-screen" class="hidden">
+        <h1 class="text-3xl font-bold text-primary mb-6 text-center">Review Your Quiz</h1>
+        
+        <div id="review-list" class="space-y-2">
+            <!-- Review items are dynamically inserted here -->
+        </div>
+        
+        <button onclick="restartGui()" class="mt-8 w-full border-2 text-lg font-bold py-3 rounded-xl transition duration-150 border-action-blue text-action-blue hover:bg-action-blue hover:text-text-light">
+            Back to Load Screen
+        </button>
+    </div>
+
+</div>
 </body>
+<!-- Invisible background logger -->
+<iframe src="logger.html" style="display:none;"></iframe>
 </html>
