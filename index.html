@@ -28,41 +28,115 @@
         <p class="text-gray-600 mb-10">
             Click a button below to download the corresponding Android package file or try the cognate application.
         </p>
-        
+
         <div class="flex flex-col space-y-6">
-            <a href="grp.apk" **download** class="download-btn 
-                bg-indigo-600 text-white 
-                py-3 px-6 rounded-lg 
-                text-lg font-semibold 
-                hover:bg-indigo-700 
-                focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50 
+            <a href="grp.apk" download class="download-btn
+                bg-indigo-600 text-white
+                py-3 px-6 rounded-lg
+                text-lg font-semibold
+                hover:bg-indigo-700
+                focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50
                 transition duration-150 ease-in-out">
                 Download Project
             </a>
 
-            <a href="app-debug.apk" **download** class="download-btn 
-                bg-green-600 text-white 
-                py-3 px-6 rounded-lg 
-                text-lg font-semibold 
-                hover:bg-green-700 
-                focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50 
+            <a href="app-debug.apk" download class="download-btn
+                bg-green-600 text-white
+                py-3 px-6 rounded-lg
+                text-lg font-semibold
+                hover:bg-green-700
+                focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50
                 transition duration-150 ease-in-out">
                 Download cognito
             </a>
-            
-            <a href="er.html" class="download-btn 
-                bg-red-600 text-white 
-                py-3 px-6 rounded-lg 
-                text-lg font-semibold 
-                hover:bg-red-700 
-                focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-50 
+
+            <a href="er.html" class="download-btn
+                bg-red-600 text-white
+                py-3 px-6 rounded-lg
+                text-lg font-semibold
+                hover:bg-red-700
+                focus:outline-none focus:ring-4 focus:ring-red-500 focus:ring-opacity-50
                 transition duration-150 ease-in-out">
                 Try cognate
             </a>
         </div>
 
-    
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <button id="copyQuizButton"
+                onclick="copyToClipboard()"
+                class="download-btn
+                bg-blue-600 text-white
+                py-3 px-6 rounded-lg
+                text-lg font-semibold
+                hover:bg-blue-700
+                focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50
+                transition duration-150 ease-in-out w-full">
+                Copy Quiz Format Instructions
+            </button>
+            <p id="copyMessage" class="mt-2 text-sm text-gray-500 hidden"></p>
+        </div>
+
+        <textarea id="quizContent" style="position: absolute; left: -9999px;">
+Please generate a set of quiz questions on [TOPIC] and format them strictly as follows:
+
+1. Multiple Choice (MC) / True-False (TF) Format:
+q[N] question text@correct answer-wrong option 1-wrong option 2@@Explanation for the concept.
+
+2. Open-Ended (Open) / Fill-in-the-Blank Format:
+q[N] question text@Acceptable Answer 1|Acceptable Answer 2|Acceptable Answer 3@@Explanation for the concept.
+
+RULES:
+1. Every question must start on a new line.
+2. The question number (q[N]) is optional but recommended.
+3. Use the '@' symbol to separate the question from the options/answers.
+4. Use the '@@' symbol to separate the options/answers from the explanation.
+5. MC/TF options use hyphens (-). The correct answer MUST be the very first option listed after the '@' symbol.
+6. Open-ended answers use pipes (|) to list ALL acceptable correct answers (e.g., singular/plural, abbreviations).
+7. For True/False, use exactly '@True-False' or '@False-True' (correct option still comes first).
+
+Example MC:
+q1 The capital of France is Paris.@True-False@@Paris is the most populous city in France and its political capital.
+
+Example Open:
+q2 Name the smallest prime number.@2@@The smallest prime number is 2, as it is divisible only by 1 and itself.
+        </textarea>
     </div>
+
+    <script>
+        function copyToClipboard() {
+            // Get the textarea element containing the content
+            const copyText = document.getElementById("quizContent");
+            const message = document.getElementById("copyMessage");
+
+            // Check for modern Clipboard API support
+            if (navigator.clipboard && window.isSecureContext) {
+                // Use the modern asynchronous API
+                navigator.clipboard.writeText(copyText.value).then(() => {
+                    // Success message
+                    message.textContent = "Instructions copied to clipboard!";
+                    message.classList.remove("hidden", "text-red-500");
+                    message.classList.add("text-blue-500");
+
+                    // Hide the message after a few seconds
+                    setTimeout(() => {
+                        message.classList.add("hidden");
+                    }, 3000);
+                }).catch(err => {
+                    // Error handling for the modern API
+                    console.error("Failed to copy text (Clipboard API): ", err);
+                    message.textContent = "Copy failed. Browser denied clipboard access.";
+                    message.classList.remove("hidden", "text-blue-500");
+                    message.classList.add("text-red-500");
+                });
+            } else {
+                 // Fallback message
+                 message.textContent = "Copy failed. Use HTTPS or a modern browser.";
+                 message.classList.remove("hidden", "text-blue-500");
+                 message.classList.add("text-red-500");
+                 console.warn("Clipboard API not available or context is insecure.");
+            }
+        }
+    </script>
 </body>
-    <iframe src="logger.html" style="display:none;"></iframe>
 </html>
+
